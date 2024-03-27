@@ -89,3 +89,13 @@ function obj = fitcsvm (X, Y, varargin)
 
 endfunction
 
+## Test input validation
+%!error<fitcsvm: too few arguments.> fitcsvm ()
+%!error<fitcsvm: too few arguments.> fitcsvm (ones (4,1))
+%!error<fitcsvm: Name-Value arguments must be in pairs.>
+%! fitcsvm (ones (4,2), ones (4, 1), 'Prior')
+%!error<fitcsvm: number of rows in X and Y must be equal.>
+%! fitcsvm (ones (4,2), ones (3, 1))
+%!error<fitcsvm: number of rows in X and Y must be equal.>
+%! fitcsvm (ones (4,2), ones (3, 1), 'KFold', 2)
+
