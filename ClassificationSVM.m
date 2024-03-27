@@ -86,7 +86,8 @@ classdef ClassificationSVM
 ##
 ## @item @tab @qcode{"IterationLimit"} @tab
 ##
-## @item @tab @qcode{"KernelFunction"} @tab
+## @item @tab @qcode{"KernelFunction"} @tab Supported Kernel Functions are
+## linear, gaussian (or rbf), polynomial
 ##
 ## @item @tab @qcode{"KernelScale"} @tab
 ##
@@ -167,7 +168,7 @@ classdef ClassificationSVM
 
     methods (Access = public)
 
-    ## Class object contructor
+    ## Class object constructor
     function this = ClassificationSVM (X, Y, varargin)
       ## Check for sufficient number of input arguments
       if (nargin < 2)
@@ -244,6 +245,11 @@ classdef ClassificationSVM
           case "kkttolerance"
           case "iterationlimit"
           case "kernelfunction"
+          kernelfunction = varargin{2};
+            if (! any (strcmpi (kernelfunction, {"linear", "gaussian", "rbf", ...
+              "polynomial"})))
+            error ("ClassificationSVM: unsupported Kernel function.");
+            endif
           case "kernenlscale"
           case "kerneloffset"
           case "optimizehyperparameters"
@@ -456,6 +462,9 @@ endclassdef
 %!error<ClassificationSVM: too few input arguments.> ClassificationSVM (ones(10,2))
 %!error<ClassificationSVM: number of rows in X and Y must be equal.> ...
 %! ClassificationSVM (ones(10,2), ones (5,1))
+%!error<ClassificationSVM: unsupported Kernel function.>
+%! ClassificationSVM (ones(10,2), ones (10,1), "KernelFunction","some")
+
 %!error<ClassificationSVM: invalid values in X.> ...
 %! ClassificationSVM ([1;2;3;"a";4], ones (5,1))
 %!error<ClassificationSVM: invalid parameter name in optional pair arguments.> ...
