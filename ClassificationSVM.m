@@ -127,16 +127,10 @@ classdef ClassificationSVM
 ##
 ## @end multitable
 ##
-## You can parse either a @qcode{"formula"} or an @qcode{"interactions"}
-## optional parameter.  Parsing both parameters will result an error.
-## Accordingly, you can only pass up to two parameters among @qcode{"knots"},
-## @qcode{"order"}, and @qcode{"dof"} to define the required polynomial for
-## training the GAM model.
-##
 ## @seealso{fitcsvm}
 ## @end deftypefn
 
-    properties (Access = public)
+  properties (Access = public)
 
     X = [];                   # Predictor data
     Y = [];                   # Class labels
@@ -162,11 +156,11 @@ classdef ClassificationSVM
     NSMethod        = [];     # Nearest neighbor search method
     IncludeTies     = [];     # Flag for handling ties
     BucketSize      = [];     # Maximum data points in each node
-    ## Supported kernel functions: "gaussian", "rbf", "linear", "polynomial"
+  ## Supported kernel functions: "gaussian", "rbf", "linear", "polynomial"
   endproperties
 
 
-    methods (Access = public)
+  methods (Access = public)
 
     ## Class object constructor
     function this = ClassificationSVM (X, Y, varargin)
@@ -186,26 +180,26 @@ classdef ClassificationSVM
 
       ## Set default values before parsing optional parameters
       Alpha                   = ;
-      BoxConstraint           = ;
-      CacheSize               = ;
+      BoxConstraint           = 1;
+      CacheSize               = 1000;
       CategoricalPredictors   = ;
       ClassNames              = ;
       ClipAlphas              = ;
       Cost                    = ;
-      CrossVal                = ;
+      CrossVal                = 'off';
       CVPartition             = ;
-      Holdout                 = ;
-      KFold                   = ;
+      Holdout                 = [];
+      KFold                   = 10;
       Leaveout                = ;
-      GapTolerance            = ;
-      DeltaGradientTolerance  = ;
-      KKTTolerance            = ;
-      IterationLimit          = ;
-      KernelFunction          = ;
-      KernelScale             = ;
+      GapTolerance            = 0;
+      DeltaGradientTolerance  = [];
+      KKTTolerance            = [];
+      IterationLimit          = 1e6;
+      KernelFunction          = 'linear';
+      KernelScale             = 1;
       KernelOffset            = ;
       OptimizeHyperparameters = ;
-      PolynomialOrder         = ;
+      PolynomialOrder         = 3;
       Nu                      = ;
       NumPrint                = ;
       OutlierFraction         = ;
@@ -228,35 +222,107 @@ classdef ClassificationSVM
       ## Parse extra parameters
       while (numel (varargin) > 0)
         switch (tolower (varargin {1}))
+
           case "alpha"
+
           case "boxconstraint"
+
           case "cachesize"
+
           case "categoricalpredictors"
+
           case "classnames"
+
           case "clipalphas"
+
           case "cost"
+            Cost = varargin{2};
+            if (! (isnumeric (Cost) && issquare (Cost)))
+              error ("ClassificationSVM: Cost must be a numeric square matrix.");
+            endif
+
           case "crossval"
+
           case "cvpartition"
+
           case "holdout"
+            Holdout = varargin{2};
+            if (! isnumeric(Holdout) && isscalar(Holdout))
+              error ("ClassificationSVM: Holdout must be a numeric scalar.");
+            endif
+            if (Holdout < 0 || Holdout >1)
+              error ("ClassificationSVM: Holdout must be between 0 and 1.");
+            endif
+
+
           case "kfold"
+            KFold = varargin{2};
+            if (! isnumeric(KFold))
+              error ("ClassificationSVM: KFold must be a numeric value.");
+            endif
+
           case "leaveout"
+
           case "gaptolerance"
+            GapTolerance = varargin{2};
+            if (! isnumeric(GapTolerance) && isscalar(GapTolerance))
+              error ("ClassificationSVM: GapTolerance must be a numeric scalar.");
+            endif
+            if (GapTolerance < 0)
+              error ("ClassificationSVM: GapTolerance must be non-negative scalar.");
+            endif
+
           case "deltagradienttolerance"
+            DeltaGradientTolerance = varargin{2};
+            if (! isnumeric(DeltaGradientTolerance))
+              error (strcat(["ClassificationSVM: DeltaGradientTolerance must ], ...
+              ["be a numeric value."]));
+            endif
+            if (GapTolerance < 0)
+              error (strcat(["ClassificationSVM: DeltaGradientTolerance must ], ...
+              ["be non-negative scalar."]));
+            endif
+
+
           case "kkttolerance"
+
           case "iterationlimit"
+            IterationLimit = varargin{2};
+            if (! isnumeric(IterationLimit) && isscalar(IterationLimit)...
+              && IterationLimit >= 0)
+              error ("ClassificationSVM: IterationLimit must be a positive number.");
+            endif
+
           case "kernelfunction"
-          kernelfunction = varargin{2};
+            kernelfunction = varargin{2};
             if (! any (strcmpi (kernelfunction, {"linear", "gaussian", "rbf", ...
               "polynomial"})))
             error ("ClassificationSVM: unsupported Kernel function.");
             endif
+
           case "kernenlscale"
+
           case "kerneloffset"
+            KernelOffset = varargin{2};
+            if (! isnumeric(KernelOffset) && isscalar(KernelOffset)...
+              && KernelOffset >= 0)
+              error ("ClassificationSVM: KernelOffset must be a non-negative scalar.");
+            endif
+
           case "optimizehyperparameters"
+
           case "polynomialorder"
+            PolynomialOrder = varargin{2};
+            if (! isnumeric(PolynomialOrder))
+              error ("ClassificationSVM: PolynomialOrder must be a numeric value.");
+            endif
+
           case "nu"
+
           case "numprint"
+
           case "outlierfraction"
+
           case "predictornames"
             PredictorNames = varargin{2};
             if (! isempty (PredictorNames))
@@ -268,18 +334,46 @@ classdef ClassificationSVM
                                [" have same number of columns as X."]));
               endif
             endif
+
           case "prior"
+
           case "removeduplicates"
+
           case "responsename"
-            ResponseName = varargin{2};
-            if (! ischar (ResponseName))
+            if (! ischar (varargin{2}))
               error ("ClassificationSVM: ResponseName must be a char string.");
             endif
+            ResponseName = tolower(varargin{2});
+
           case "scoretransform"
+
           case "solver"
+            if (! ischar (varargin{2}))
+              error ("ClassificationSVM: Solver must be a char string.");
+            endif
+            Solver = tolower(varargin{2});
+            if(Solver=='smo')
+              if(isempty(KernelOffset))
+                KernelOffset = 0;
+              elseif(isempty(DeltaGradientTolerance))
+                DeltaGradientTolerance = 1e-3;
+              elseif(isempty(KKTTolerance))
+                KKTTolerance = 0;
+            elseif(Solver=='isda')
+              if(isempty(KernelOffset))
+                KernelOffset = 0.1;
+              elseif(isempty(DeltaGradientTolerance))
+                DeltaGradientTolerance = 0;
+              elseif(isempty(KKTTolerance))
+                KKTTolerance = 1e-3;
+            endif
+
           case "shrinkageperiod"
+
           case "standardize"
+
           case "verbose"
+
           case "weights"
 
 
@@ -418,7 +512,7 @@ endclassdef
 %! legend ({"Theoretical Response", "Predicted Response", "Prediction Intervals"});
 %!
 %! ## Use 30% Holdout partitioning for training and testing data
-%! C = cvpartition (80, "HoldOut", 0.3);
+%! C = cvpartition (80, "Holdout", 0.3);
 %! [ypred, ySDsd, yInt] = predict (a, X(test(C),:));
 %!
 %! ## Plot the results
@@ -464,6 +558,12 @@ endclassdef
 %! ClassificationSVM (ones(10,2), ones (5,1))
 %!error<ClassificationSVM: unsupported Kernel function.>
 %! ClassificationSVM (ones(10,2), ones (10,1), "KernelFunction","some")
+%!error<ClassificationSVM: PredictorNames must be a cellstring array.> ...
+%! ClassificationSVM (ones(10,2), ones (10,1), "PredictorNames", -1)
+%!error<ClassificationSVM: PredictorNames must be a cellstring array.> ...
+%! ClassificationSVM (ones(10,2), ones (10,1), "PredictorNames", ['a','b','c'])
+%!error<ClassificationSVM: PredictorNames must have same number of columns as X.> ...
+%! ClassificationSVM (ones(10,2), ones (10,1), "PredictorNames", {'a','b','c'})
 
 %!error<ClassificationSVM: invalid values in X.> ...
 %! ClassificationSVM ([1;2;3;"a";4], ones (5,1))
@@ -509,12 +609,7 @@ endclassdef
 %! ClassificationSVM (ones(10,2), ones (10,1), "tol", -1)
 %!error<ClassificationSVM: ResponseName must be a char string.> ...
 %! ClassificationSVM (ones(10,2), ones (10,1), "responsename", -1)
-%!error<ClassificationSVM: PredictorNames must be a cellstring array.> ...
-%! ClassificationSVM (ones(10,2), ones (10,1), "predictors", -1)
-%!error<ClassificationSVM: PredictorNames must be a cellstring array.> ...
-%! ClassificationSVM (ones(10,2), ones (10,1), "predictors", ['a','b','c'])
-%!error<ClassificationSVM: PredictorNames must have same number of columns as X.> ...
-%! ClassificationSVM (ones(10,2), ones (10,1), "predictors", {'a','b','c'})
+
 
 ## Test input validation for predict method
 %!error<ClassificationSVM.predict: too few arguments.> ...
