@@ -178,13 +178,27 @@ classdef ClassificationSVM
         error ("ClassificationSVM: number of rows in X and Y must be equal.");
       endif
 
+      ## Check if it's one-class or two-class learning
+      if (numel(unique(Y)) == 1)
+       learning_class = 1;
+      elseif(numel(unique(Y)) == 2)
+       learning_class = 2;
+      else
+       error ("ClassificationSVM: invalid number of unique labels in Y.");
+      endif
+
       ## Set default values before parsing optional parameters
-      Alpha                   = ;
+      if (learning_class == 1)                #Default values for one class learning
+       Alpha                  = 0.5 * ones(size(X,1),1);
+      elseif(learning_class == 2)             #Default values for two class learning
+       Alpha                  = zeros(size(X,1),1);
+      endif
+
       BoxConstraint           = 1;
       CacheSize               = 1000;
       CategoricalPredictors   = ;
       ClassNames              = ;
-      ClipAlphas              = ;
+      ClipAlphas              = true;
       Cost                    = ;
       CrossVal                = 'off';
       CVPartition             = ;
@@ -198,21 +212,21 @@ classdef ClassificationSVM
       KernelFunction          = 'linear';
       KernelScale             = 1;
       KernelOffset            = ;
-      OptimizeHyperparameters = ;
+      OptimizeHyperparameters = 'none';
       PolynomialOrder         = 3;
-      Nu                      = ;
-      NumPrint                = ;
-      OutlierFraction         = ;
+      Nu                      = 0.5;
+      NumPrint                = 1000;
+      OutlierFraction         = 0;
       PredictorNames          = {};           #Predictor variable names
       Prior                   = ;
-      RemoveDuplicates        = ;
+      RemoveDuplicates        = false;
       ResponseName            = [];           #Response variable name
-      ScoreTransform          = ;
+      ScoreTransform          = 'none';
       Solver                  = ;
       ShrinkagePeriod         = ;
-      Standardize             = ;
-      Verbose                 = ;
-      Weights                 = ;
+      Standardize             = false;
+      Verbose                 = 0;
+      Weights                 = ones(size(X,1),1);
 
       ## Number of parameters for Knots, DoF, Order (maximum 2 allowed)
       KOD = 0;
@@ -234,6 +248,10 @@ classdef ClassificationSVM
           case "classnames"
 
           case "clipalphas"
+            ClipAlphas = tolower(varargin{2});
+            if (! (islogical (ClipAlphas) && isscalar (ClipAlphas)))
+              error ("ClassificationSVM: ClipAlphas must be a logical scalar.");
+            endif
 
           case "cost"
             Cost = varargin{2};
@@ -314,14 +332,32 @@ classdef ClassificationSVM
           case "polynomialorder"
             PolynomialOrder = varargin{2};
             if (! isnumeric(PolynomialOrder))
-              error ("ClassificationSVM: PolynomialOrder must be a numeric value.");
+              error ("ClassificationSVM: PolynomialOrder must be a positive integer.");
             endif
 
           case "nu"
+            Nu = varargin{2};
+            if ( !((isscalar(Nu) && Nu > 0 ))
+              error ("ClassificationSVM: Nu must be positive scalar.");
+            endif
 
           case "numprint"
+            NumPrint = varargin{2};
+            if ( !((isscalar(NumPrint) && NumPrint >= 0 ))
+              error ("ClassificationSVM: NumPrint must be non-negative scalar.");
+            endif
 
           case "outlierfraction"
+            OutlierFraction = varargin{2};
+            if (! (isscalar(OutlierFraction) && OutlierFraction >= 0 && OutlierFraction <= 1)
+              error (strcat(["ClassificationSVM: OutlierFraction must be a scalar"], ...
+              [" between 0 and 1."]));
+            endif
+            if (OutlierFraction > 0 && learning_class == 2 && isempty(Solver))
+              Solver = 'isda';
+            elseif( isempty(Solver))
+              Solver = 'SMO';
+            endif
 
           case "predictornames"
             PredictorNames = varargin{2};
@@ -336,8 +372,23 @@ classdef ClassificationSVM
             endif
 
           case "prior"
+            Prior = varargin{2};
+            if ( isstring(Prior))
+              Prior = tolower(Prior);
+              if (! any (strcmpi (Prior, {"empirical", "uniform"})))
+                error ("ClassificationSVM: Unsupported Prior.");
+              endif
+            elseif(! isstruct (Prior) || ! isfield (Prior, "ClassProbs") ...
+                     || ! isfield (Prior, "ClassNames"))
+              error (strcat (["ClassificationSVM: Prior must be a structure"], ...
+                     [" with 'ClassProbs', and 'ClassNames' fields present."]));
+            endif
 
           case "removeduplicates"
+            RemoveDuplicates = tolower(varargin{2});
+            if (! (islogical (RemoveDuplicates) && isscalar (RemoveDuplicates)))
+              error ("ClassificationSVM: RemoveDuplicates must be a logical scalar.");
+            endif
 
           case "responsename"
             if (! ischar (varargin{2}))
@@ -346,12 +397,18 @@ classdef ClassificationSVM
             ResponseName = tolower(varargin{2});
 
           case "scoretransform"
+            ScoreTransform = varargin{2};
+            if (! any (strcmpi (ScoreTransform, {"symmetric", "invlogit", "ismax", ...
+              "symmetricismax", "none", "logit", "doublelogit", "symmetriclogit", ...
+              "sign"})))
+            error ("ClassificationSVM: unsupported ScoreTransform function handle.");
+            endif
 
           case "solver"
-            if (! ischar (varargin{2}))
-              error ("ClassificationSVM: Solver must be a char string.");
-            endif
             Solver = tolower(varargin{2});
+            if (! any (strcmpi (Solver, {"smo", "isda", "l1qp"})))
+              error ("ClassificationSVM: Unsupported Solver.");
+            endif
             if(Solver=='smo')
               if(isempty(KernelOffset))
                 KernelOffset = 0;
@@ -371,8 +428,17 @@ classdef ClassificationSVM
           case "shrinkageperiod"
 
           case "standardize"
+            Standardize = tolower(varargin{2});
+            if (! (islogical (Standardize) && isscalar (Standardize)))
+              error ("ClassificationSVM: Standardize must be a logical scalar.");
+            endif
 
           case "verbose"
+            Verbose = varargin{2};
+            if (! isscalar (Verbose) || !any (isequal (Verbose, {0, 1, 2})))
+              error ("ClassificationSVM: Verbose must be either 0, 1 or 2.");
+            endif
+
 
           case "weights"
 
