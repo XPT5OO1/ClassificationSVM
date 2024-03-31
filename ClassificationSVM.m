@@ -51,10 +51,12 @@ classdef ClassificationSVM
 ## @multitable @columnfractions 0.05 0.2 0.75
 ## @headitem @tab @var{Name} @tab @var{Value}
 ##
-## @item @tab @qcode{"Alpha"} @tab Predictor Variable names, specified as
-## a row vector cell of strings with the same length as the columns in @var{X}.
-## If omitted, the program will generate default variable names
-## @qcode{(x1, x2, ..., xn)} for each column in @var{X}.
+## @item @tab @qcode{"Alpha"} @tab A vector of non negative elements used as
+## initial estimates of the alpha coefficients. Each element in the vector
+## corresponds to a row in the input data @var(X). The default value of Alpha is:
+## The default value of Alpha is:
+## - For two-class learning: zeros(size(X,1), 1)
+## - For one-class learning: 0.5 * ones(size(X,1), 1)
 ##
 ## @item @tab @qcode{"BoxConstraint"} @tab
 ##
@@ -170,8 +172,8 @@ classdef ClassificationSVM
       endif
 
       ## Get training sample size and number of variables in training data
-      nsample = rows (X);
-      ndims_X = columns (X);
+      nsample = rows (X);                    #Number of samples in X
+      ndims_X = columns (X);                 #Number of dimensions in X
 
       ## Check correspodence between predictors and response
       if (nsample != rows (Y))
@@ -184,7 +186,7 @@ classdef ClassificationSVM
       elseif(numel(unique(Y)) == 2)
        learning_class = 2;
       else
-       error ("ClassificationSVM: invalid number of unique labels in Y.");
+       error ("ClassificationSVM: SVM only supports one class or two class learning.");
       endif
 
       ## Set default values before parsing optional parameters
@@ -228,17 +230,20 @@ classdef ClassificationSVM
       Verbose                 = 0;
       Weights                 = ones(size(X,1),1);
 
-      ## Number of parameters for Knots, DoF, Order (maximum 2 allowed)
-      KOD = 0;
-      ## Number of parameters for Formula, Ineractions (maximum 1 allowed)
-      F_I = 0;
 
       ## Parse extra parameters
       while (numel (varargin) > 0)
         switch (tolower (varargin {1}))
 
           case "alpha"
-
+          Alpha = varargin{2};
+            if (!isvector(alpha))
+                error("ClassificationSVM: Alpha must be a vector.");
+            elseif (size(alpha, 1) != rows(X))
+                error("ClassificationSVM: Alpha must have one element per row of X.");
+            elseif (any(alpha < 0))
+                error("ClassificationSVM: Alpha must be non-negative.");
+            endif
           case "boxconstraint"
 
           case "cachesize"
@@ -318,7 +323,7 @@ classdef ClassificationSVM
             error ("ClassificationSVM: unsupported Kernel function.");
             endif
 
-          case "kernenlscale"
+          case "kernelscale"
 
           case "kerneloffset"
             KernelOffset = varargin{2};
@@ -442,84 +447,6 @@ classdef ClassificationSVM
 
           case "weights"
 
-
-          case "formula"
-            if (F_I < 1)
-              Formula = varargin{2};
-              if (! ischar (Formula) && ! islogical (Formula))
-                error ("ClassificationSVM: Formula must be a string.");
-              endif
-              F_I += 1;
-            else
-              error ("ClassificationSVM: Interactions have been already defined.");
-            endif
-
-          case "interactions"
-            if (F_I < 1)
-              tmp = varargin{2};
-              if (isnumeric (tmp) && isscalar (tmp)
-                                  && tmp == fix (tmp) && tmp >= 0)
-                Interactions = tmp;
-              elseif (islogical (tmp))
-                Interactions = tmp;
-              elseif (ischar (tmp) && strcmpi (tmp, "all"))
-                Interactions = tmp;
-              else
-                error ("ClassificationSVM: invalid Interactions parameter.");
-              endif
-              F_I += 1;
-            else
-              error ("ClassificationSVM: Formula has been already defined.");
-            endif
-
-          case "knots"
-            if (KOD < 2)
-              Knots = varargin{2};
-              if (! isnumeric (Knots) || ! (isscalar (Knots) ||
-                  isequal (size (Knots), [1, ndims_X])))
-                error ("ClassificationSVM: invalid value for Knots.");
-              endif
-              DoF = Knots + Order;
-              Order = DoF - Knots;
-              KOD += 1;
-            else
-              error ("ClassificationSVM: DoF and Order have been set already.");
-            endif
-
-          case "order"
-            if (KOD < 2)
-              Order = varargin{2};
-              if (! isnumeric (Order) || ! (isscalar (Order) ||
-                  isequal (size (Order), [1, ndims_X])))
-                error ("ClassificationSVM: invalid value for Order.");
-              endif
-              DoF = Knots + Order;
-              Knots = DoF - Order;
-              KOD += 1;
-            else
-              error ("ClassificationSVM: DoF and Knots have been set already.");
-            endif
-
-          case "dof"
-            if (KOD < 2)
-              DoF = varargin{2};
-              if (! isnumeric (DoF) ||
-                  ! (isscalar (DoF) || isequal (size (DoF), [1, ndims_X])))
-                error ("ClassificationSVM: invalid value for DoF.");
-              endif
-              Knots = DoF - Order;
-              Order = DoF - Knots;
-              KOD += 1;
-            else
-              error ("ClassificationSVM: Knots and Order have been set already.");
-            endif
-
-          case "tol"
-            Tol = varargin{2};
-            if (! (isnumeric (Tol) && isscalar (Tol) && (Tol > 0)))
-              error ("ClassificationSVM: Tolerance must be a Positive scalar.");
-            endif
-
           otherwise
             error (strcat (["ClassificationSVM: invalid parameter name"],...
                            [" in optional pair arguments."]));
@@ -530,98 +457,23 @@ classdef ClassificationSVM
     endfunction
    endmethods
 endclassdef
-%!demo
-%! ## Train a ClassificationSVM Model for synthetic values
-%! f1 = @(x) cos (3 * x);
-%! f2 = @(x) x .^ 3;
-%! x1 = 2 * rand (50, 1) - 1;
-%! x2 = 2 * rand (50, 1) - 1;
-%! y = f1(x1) + f2(x2);
-%! y = y + y .* 0.2 .* rand (50,1);
-%! X = [x1, x2];
-%! a = fitrgam (X, y, "tol", 1e-3)
 
-%!demo
-%! ## Declare two different functions
-%! f1 = @(x) cos (3 * x);
-%! f2 = @(x) x .^ 3;
-%!
-%! ## Generate 80 samples for f1 and f2
-%! x = [-4*pi:0.1*pi:4*pi-0.1*pi]';
-%! X1 = f1 (x);
-%! X2 = f2 (x);
-%!
-%! ## Create a synthetic response by adding noise
-%! rand ("seed", 3);
-%! Ytrue = X1 + X2;
-%! Y = Ytrue + Ytrue .* 0.2 .* rand (80,1);
-%!
-%! ## Assemble predictor data
-%! X = [X1, X2];
-%!
-%! ## Train the GAM and test on the same data
-%! a = fitrgam (X, Y, "order", [5, 5]);
-%! [ypred, ySDsd, yInt] = predict (a, X);
-%!
-%! ## Plot the results
-%! figure
-%! [sortedY, indY] = sort (Ytrue);
-%! plot (sortedY, "r-");
-%! xlim ([0, 80]);
-%! hold on
-%! plot (ypred(indY), "g+")
-%! plot (yInt(indY,1), "k:")
-%! plot (yInt(indY,2), "k:")
-%! xlabel ("Predictor samples");
-%! ylabel ("Response");
-%! title ("actual vs predicted values for function f1(x) = cos (3x) ");
-%! legend ({"Theoretical Response", "Predicted Response", "Prediction Intervals"});
-%!
-%! ## Use 30% Holdout partitioning for training and testing data
-%! C = cvpartition (80, "Holdout", 0.3);
-%! [ypred, ySDsd, yInt] = predict (a, X(test(C),:));
-%!
-%! ## Plot the results
-%! figure
-%! [sortedY, indY] = sort (Ytrue(test(C)));
-%! plot (sortedY, 'r-');
-%! xlim ([0, sum(test(C))]);
-%! hold on
-%! plot (ypred(indY), "g+")
-%! plot (yInt(indY,1),'k:')
-%! plot (yInt(indY,2),'k:')
-%! xlabel ("Predictor samples");
-%! ylabel ("Response");
-%! title ("actual vs predicted values for function f1(x) = cos (3x) ");
-%! legend ({"Theoretical Response", "Predicted Response", "Prediction Intervals"});
-
-## Test constructor
-%!test
-%! x = [1, 2, 3; 4, 5, 6; 7, 8, 9; 3, 2, 1];
-%! y = [1; 2; 3; 4];
-%! a = ClassificationSVM (x, y);
-%! assert ({a.X, a.Y}, {x, y})
-%! assert ({a.BaseModel.Intercept}, {2.5000})
-%! assert ({a.Knots, a.Order, a.DoF}, {[5, 5, 5], [3, 3, 3], [8, 8, 8]})
-%! assert ({a.NumObservations, a.NumPredictors}, {4, 3})
-%! assert ({a.ResponseName, a.PredictorNames}, {"Y", {"x1", "x2", "x3"}})
-%! assert ({a.Formula}, {[]})
-%!test
-%! x = [1, 2, 3, 4; 4, 5, 6, 7; 7, 8, 9, 1; 3, 2, 1, 2];
-%! y = [1; 2; 3; 4];
-%! pnames = {"A", "B", "C", "D"};
-%! formula = "Y ~ A + B + C + D + A:C";
-%! intMat = logical ([1,0,0,0;0,1,0,0;0,0,1,0;0,0,0,1;1,0,1,0]);
-%! a = ClassificationSVM (x, y, "predictors", pnames, "formula", formula);
-%! assert ({a.IntMatrix}, {intMat})
-%! assert ({a.ResponseName, a.PredictorNames}, {"Y", pnames})
-%! assert ({a.Formula}, {formula})
 
 ## Test input validation for constructor
 %!error<ClassificationSVM: too few input arguments.> ClassificationSVM ()
 %!error<ClassificationSVM: too few input arguments.> ClassificationSVM (ones(10,2))
 %!error<ClassificationSVM: number of rows in X and Y must be equal.> ...
 %! ClassificationSVM (ones(10,2), ones (5,1))
+%!error<ClassificationSVM: SVM only supports one class or two class learning.>
+%! ClassificationSVM (ones(10,2), ones (10,3))
+%!error<ClassificationSVM: Alpha must be a vector.>
+%! ClassificationSVM (ones(10,2), ones (10,1), "Alpha", 1)
+%!error<ClassificationSVM: Alpha must have one element per row of X.>
+%! ClassificationSVM (ones(10,2), ones (10,1), "Alpha", ones(5,1))
+%!error<ClassificationSVM: Alpha must be non-negative.>
+%! ClassificationSVM (ones(10,2), ones (10,1), "Alpha", -1)
+
+
 %!error<ClassificationSVM: unsupported Kernel function.>
 %! ClassificationSVM (ones(10,2), ones (10,1), "KernelFunction","some")
 %!error<ClassificationSVM: PredictorNames must be a cellstring array.> ...
