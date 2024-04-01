@@ -63,7 +63,13 @@ classdef ClassificationSVM
 ## between maximizing the margin and minimizing the classification error. The
 ## default value of BoxConstraint is 1.
 ##
-## @item @tab @qcode{"CacheSize"} @tab
+## @item @tab @qcode{"CacheSize"} @tab Specifies the cache size. It can be:
+## @itemize
+## @item A positive scalar that specifies the cache size in megabytes (MB).
+## @item A string "maximal" which will result in cache large enough to hold the
+## entire Gram matrix of size @math{NxN} where N is the number of rows in X.
+## The default value is 1000.
+## @end itemize
 ##
 ## @item @tab @qcode{"CategoricalPredictors"} @tab
 ##
@@ -91,8 +97,21 @@ classdef ClassificationSVM
 ##
 ## @item @tab @qcode{"IterationLimit"} @tab
 ##
-## @item @tab @qcode{"KernelFunction"} @tab Supported Kernel Functions are
-## linear, gaussian (or rbf), polynomial
+## @item @tab @qcode{"KernelFunction"} @tab Specifies the method for computing
+## elements of the Gram matrix. It accepts the following options:
+## @itemize
+## @item 'linear': Computes the linear kernel, which is simply the dot product
+## of the input vectors.
+## @item 'gaussian' or 'rbf': Computes the Gaussian kernel, also known as the
+## radial basis function (RBF) kernel. It measures the similarity between two
+## vectors in a high-dimensional space.
+## @item 'polynomial': Computes the polynomial kernel, which raises the
+## dot product of the input vectors to a specified power.
+## @item You can also specify the name of a custom kernel function. It must be of
+## the form: function G = KernelFunc(U, V)
+## This custom function must take two input matrices, U and V, and return a
+## matrix G of size M-by-N, where M and N are the number of rows in U and V.
+## @end itemize
 ##
 ## @item @tab @qcode{"KernelScale"} @tab
 ##
@@ -161,7 +180,7 @@ classdef ClassificationSVM
     NSMethod        = [];     # Nearest neighbor search method
     IncludeTies     = [];     # Flag for handling ties
     BucketSize      = [];     # Maximum data points in each node
-  ## Supported kernel functions: "gaussian", "rbf", "linear", "polynomial"
+
   endproperties
 
 
@@ -195,8 +214,10 @@ classdef ClassificationSVM
       ## Set default values before parsing optional parameters
       if (learning_class == 1)                #Default values for one class learning
        Alpha                  = 0.5 * ones(size(X,1),1);
+       KernelFunction         = 'gaussian';
       elseif(learning_class == 2)             #Default values for two class learning
        Alpha                  = zeros(size(X,1),1);
+       KernelFunction         = 'linear';
       endif
 
       BoxConstraint           = 1;
@@ -214,7 +235,6 @@ classdef ClassificationSVM
       DeltaGradientTolerance  = [];
       KKTTolerance            = [];
       IterationLimit          = 1e6;
-      KernelFunction          = 'linear';
       KernelScale             = 1;
       KernelOffset            = ;
       OptimizeHyperparameters = 'none';
@@ -225,10 +245,10 @@ classdef ClassificationSVM
       PredictorNames          = {};           #Predictor variable names
       Prior                   = ;
       RemoveDuplicates        = false;
-      ResponseName            = [];           #Response variable name
+      ResponseName            = 'Y';           #Response variable name
       ScoreTransform          = 'none';
       Solver                  = ;
-      ShrinkagePeriod         = ;
+      ShrinkagePeriod         = 0;
       Standardize             = false;
       Verbose                 = 0;
       Weights                 = ones(size(X,1),1);
@@ -255,6 +275,16 @@ classdef ClassificationSVM
             endif
 
           case "cachesize"
+            CacheSize = varargin{2};
+            if ( isscalar(CacheSize))
+              if (CacheSize <= 0)
+              error ("ClassificationSVM: CacheSize must be a positive scalar.");
+            elseif (isstring(CacheSize) && tolower(CacheSize) != "maximal")
+              error ("ClassificationSVM: unidentified CacheSize.");
+            else
+              error (strcat(["ClassificationSVM: CacheSize must be either"], ...
+              [" a positive scalar or a string 'maximal'."]));
+            endif
 
           case "categoricalpredictors"
 
@@ -325,10 +355,14 @@ classdef ClassificationSVM
             endif
 
           case "kernelfunction"
-            kernelfunction = varargin{2};
-            if (! any (strcmpi (kernelfunction, {"linear", "gaussian", "rbf", ...
-              "polynomial"})))
-            error ("ClassificationSVM: unsupported Kernel function.");
+            KernelFunction = varargin{2};
+            if (!(ischar(kernelfunction) || isa(KernelFunction, 'function_handle')))
+              error("ClassificationSVM: KernelFunction must be a string or a function handle.");
+            endif
+            if (ischar(kernelfunction))
+              if (! any (strcmpi (KernelFunction, {"linear", "gaussian", "rbf", ...
+                "polynomial"})))
+              error ("ClassificationSVM: unsupported Kernel function.");
             endif
 
           case "kernelscale"
@@ -482,10 +516,20 @@ endclassdef
 %! ClassificationSVM (ones(10,2), ones (10,1), "Alpha", -1)
 %!error<ClassificationSVM: BoxConstraint must be a positive scalar.>
 %! ClassificationSVM (ones(10,2), ones (10,1), "BoxConstraint", -1)
+%!error<ClassificationSVM: CacheSize must be a positive scalar.>
+%! ClassificationSVM (ones(10,2), ones (10,1), "CacheSize", -100)
+%!error<ClassificationSVM: unidentified CacheSize.>
+%! ClassificationSVM (ones(10,2), ones (10,1), "CacheSize", 'some')
+%!error<ClassificationSVM: CacheSize must be either a positive scalar or a string 'maximal'>
+%! ClassificationSVM (ones(10,2), ones (10,1), "CacheSize", [1,2])
 
-
+%!error<ClassificationSVM: KernelFunction must be a string or a function handle.>
+%! ClassificationSVM (ones(10,2), ones (10,1), "KernelFunction",[1,2])
 %!error<ClassificationSVM: unsupported Kernel function.>
 %! ClassificationSVM (ones(10,2), ones (10,1), "KernelFunction","some")
+
+
+
 %!error<ClassificationSVM: PredictorNames must be a cellstring array.> ...
 %! ClassificationSVM (ones(10,2), ones (10,1), "PredictorNames", -1)
 %!error<ClassificationSVM: PredictorNames must be a cellstring array.> ...
@@ -552,12 +596,6 @@ endclassdef
 %! predict (ClassificationSVM(ones(10,2), ones(10,1)), ones (10,2), "includeinteractions", "some")
 %!error<ClassificationSVM.predict: includeinteractions must be a logical value.> ...
 %! predict (ClassificationSVM(ones(10,2), ones(10,1)), ones (10,2), "includeinteractions", 5)
-%!error<ClassificationSVM.predict: alpha must be a scalar value between 0 and 1.> ...
-%! predict (ClassificationSVM(ones(10,2), ones(10,1)), ones (10,2), "alpha", 5)
-%!error<ClassificationSVM.predict: alpha must be a scalar value between 0 and 1.> ...
-%! predict (ClassificationSVM(ones(10,2), ones(10,1)), ones (10,2), "alpha", -1)
-%!error<ClassificationSVM.predict: alpha must be a scalar value between 0 and 1.> ...
-%! predict (ClassificationSVM(ones(10,2), ones(10,1)), ones (10,2), "alpha", 'a')
 
 
 
