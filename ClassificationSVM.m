@@ -58,7 +58,10 @@ classdef ClassificationSVM
 ## - For two-class learning: zeros(size(X,1), 1)
 ## - For one-class learning: 0.5 * ones(size(X,1), 1)
 ##
-## @item @tab @qcode{"BoxConstraint"} @tab
+## @item @tab @qcode{"BoxConstraint"} @tab A positive scalar that specifies the
+## upper bound of Lagrange multipliers ie C in [0,C]. It determines the trade-off
+## between maximizing the margin and minimizing the classification error. The
+## default value of BoxConstraint is 1.
 ##
 ## @item @tab @qcode{"CacheSize"} @tab
 ##
@@ -238,13 +241,18 @@ classdef ClassificationSVM
           case "alpha"
           Alpha = varargin{2};
             if (!isvector(alpha))
-                error("ClassificationSVM: Alpha must be a vector.");
+              error ("ClassificationSVM: Alpha must be a vector.");
             elseif (size(alpha, 1) != rows(X))
-                error("ClassificationSVM: Alpha must have one element per row of X.");
+              error ("ClassificationSVM: Alpha must have one element per row of X.");
             elseif (any(alpha < 0))
-                error("ClassificationSVM: Alpha must be non-negative.");
+              error ("ClassificationSVM: Alpha must be non-negative.");
             endif
+
           case "boxconstraint"
+            BoxConstraint = varargin{2};
+            if ( !(isscalar(BoxConstraint) && BoxConstraint > 0))
+              error ("ClassificationSVM: BoxConstraint must be a positive scalar.");
+            endif
 
           case "cachesize"
 
@@ -472,6 +480,8 @@ endclassdef
 %! ClassificationSVM (ones(10,2), ones (10,1), "Alpha", ones(5,1))
 %!error<ClassificationSVM: Alpha must be non-negative.>
 %! ClassificationSVM (ones(10,2), ones (10,1), "Alpha", -1)
+%!error<ClassificationSVM: BoxConstraint must be a positive scalar.>
+%! ClassificationSVM (ones(10,2), ones (10,1), "BoxConstraint", -1)
 
 
 %!error<ClassificationSVM: unsupported Kernel function.>
