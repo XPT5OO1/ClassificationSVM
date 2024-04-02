@@ -17,141 +17,51 @@
 ## this program; if not, see <http://www.gnu.org/licenses/>.
 
 classdef ClassificationSVM
-
 ## -*- texinfo -*-
 ## @deftypefn  {statistics} {@var{obj} =} ClassificationSVM (@var{X}, @var{Y})
 ## @deftypefnx {statistics} {@var{obj} =} ClassificationSVM (@dots{}, @var{name}, @var{value})
 ##
 ## Create a @qcode{ClassificationSVM} class object containing a Support Vector
-## Machine (SVM) for classification.
+## classification model.
 ##
-## A @qcode{ClassificationSVM} class object can store the predictors and response
-## data along with various parameters for the SVM model.  It is recommended to
-## use the @code{fitcsvm} function to create a @qcode{ClassificationSVM} object.
-##
-## @code{@var{obj} = ClassificationSVM (@var{X}, @var{Y})} returns an object of
-## class ClassificationSVM, with matrix @var{X} containing the predictor data and
-## vector @var{Y} containing the response data.
+## @code{@var{obj} = ClassificationSVM (@var{X}, @var{Y})} returns a
+## ClassificationSVM object, with @var{X} as the predictor data and @var{Y}
+## containing the class labels of observations in @var{X}.
 ##
 ## @itemize
 ## @item
-## @var{X} must be a @math{NxP} numeric matrix of input data where rows
+## @code{X} must be a @math{NxP} numeric matrix of input data where rows
 ## correspond to observations and columns correspond to features or variables.
 ## @var{X} will be used to train the SVM model.
 ## @item
-## @var{Y} must be @math{Nx1} numeric vector containing the response data
-## corresponding to the predictor data in @var{X}. @var{Y} must have same
-## number of rows as @var{X}.
+## @code{Y} is @math{Nx1} matrix or cell matrix containing the class labels of
+## corresponding predictor data in @var{X}. @var{Y} can contain any type of
+## categorical data. @var{Y} must have same numbers of Rows as @var{X}.
+## @item
 ## @end itemize
 ##
-## @code{@var{obj} = ClassificationSVM (@dots{}, @var{name}, @var{value})} returns
-## an object of class ClassificationSVM with additional properties specified by
-## @qcode{Name-Value} pair arguments listed below.
+## @code{@var{obj} = ClassificationSVM (@dots{}, @var{name}, @var{value})}
+## returns a ClassificationSVM object with parameters specified by
+## @qcode{Name-Value} pair arguments.  Type @code{help fitcsvm} for more info.
 ##
-## @multitable @columnfractions 0.05 0.2 0.75
-## @headitem @tab @var{Name} @tab @var{Value}
+## A @qcode{ClassificationSVM} object, @var{obj}, stores the labelled training
+## data and various parameters for the Support Vector machine classification
+## model, which can be accessed in the following fields:
 ##
-## @item @tab @qcode{"Alpha"} @tab A vector of non negative elements used as
-## initial estimates of the alpha coefficients. Each element in the vector
-## corresponds to a row in the input data @var(X). The default value of Alpha is:
-## The default value of Alpha is:
-## - For two-class learning: zeros(size(X,1), 1)
-## - For one-class learning: 0.5 * ones(size(X,1), 1)
+## @multitable @columnfractions 0.28 0.02 0.7
+## @headitem @var{Field} @tab @tab @var{Description}
 ##
-## @item @tab @qcode{"BoxConstraint"} @tab A positive scalar that specifies the
-## upper bound of Lagrange multipliers ie C in [0,C]. It determines the trade-off
-## between maximizing the margin and minimizing the classification error. The
-## default value of BoxConstraint is 1.
+## @item @qcode{obj.X} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
 ##
-## @item @tab @qcode{"CacheSize"} @tab Specifies the cache size. It can be:
-## @itemize
-## @item A positive scalar that specifies the cache size in megabytes (MB).
-## @item A string "maximal" which will result in cache large enough to hold the
-## entire Gram matrix of size @math{NxN} where N is the number of rows in X.
-## The default value is 1000.
-## @end itemize
-##
-## @item @tab @qcode{"CategoricalPredictors"} @tab
-##
-## @item @tab @qcode{"ClassNames"} @tab
-##
-## @item @tab @qcode{"ClipAlphas"} @tab
-##
-## @item @tab @qcode{"Cost"} @tab
-##
-## @item @tab @qcode{"CrossVal"} @tab
-##
-## @item @tab @qcode{"CVPartition"} @tab
-##
-## @item @tab @qcode{"Holdout"} @tab
-##
-## @item @tab @qcode{"KFold"} @tab
-##
-## @item @tab @qcode{"Leaveout"} @tab
-##
-## @item @tab @qcode{"GapTolerance"} @tab
-##
-## @item @tab @qcode{"DeltaGradientTolerance"} @tab
-##
-## @item @tab @qcode{"KKTTolerance"} @tab
-##
-## @item @tab @qcode{"IterationLimit"} @tab
-##
-## @item @tab @qcode{"KernelFunction"} @tab Specifies the method for computing
-## elements of the Gram matrix. It accepts the following options:
-## @itemize
-## @item 'linear': Computes the linear kernel, which is simply the dot product
-## of the input vectors.
-## @item 'gaussian' or 'rbf': Computes the Gaussian kernel, also known as the
-## radial basis function (RBF) kernel. It measures the similarity between two
-## vectors in a high-dimensional space.
-## @item 'polynomial': Computes the polynomial kernel, which raises the
-## dot product of the input vectors to a specified power.
-## @item You can also specify the name of a custom kernel function. It must be of
-## the form: function G = KernelFunc(U, V)
-## This custom function must take two input matrices, U and V, and return a
-## matrix G of size M-by-N, where M and N are the number of rows in U and V.
-## @end itemize
-##
-## @item @tab @qcode{"KernelScale"} @tab
-##
-## @item @tab @qcode{"KernelOffset"} @tab
-##
-## @item @tab @qcode{"OptimizeHyperparameters"} @tab
-##
-## @item @tab @qcode{"PolynomialOrder"} @tab
-##
-## @item @tab @qcode{"Nu"} @tab
-##
-## @item @tab @qcode{"NumPrint"} @tab
-##
-## @item @tab @qcode{"OutlierFraction"} @tab
-##
-## @item @tab @qcode{"PredictorNames"} @tab
-##
-## @item @tab @qcode{"Prior"} @tab
-##
-## @item @tab @qcode{"RemoveDuplicates"} @tab
-##
-## @item @tab @qcode{"ResponseName"} @tab
-##
-## @item @tab @qcode{"ScoreTransform"} @tab
-##
-## @item @tab @qcode{"Solver"} @tab
-##
-## @item @tab @qcode{"ShrinkagePeriod"} @tab
-##
-## @item @tab @qcode{"Standardize"} @tab
-##
-## @item @tab @qcode{"Verbose"} @tab
-##
-## @item @tab @qcode{"Weights"} @tab
-##
-## @item @tab @qcode{"DeltaGradientTolerance"} @tab
+## @item @qcode{obj.Y} @tab @tab Class labels, specified as a logical or
+## numeric vector, or cell array of character vectors.  Each value in @var{Y} is
+## the observed class label for the corresponding row in @var{X}.
 ##
 ## @end multitable
 ##
-## @seealso{fitcsvm}
+## @seealso{fitcsvm, svmtrain, svmpredict}
 ## @end deftypefn
 
   properties (Access = public)

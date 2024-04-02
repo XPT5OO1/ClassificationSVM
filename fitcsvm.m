@@ -45,29 +45,107 @@
 ## @multitable @columnfractions 0.18 0.02 0.8
 ## @headitem @tab @var{Name} @tab @var{Value}
 ##
-## @item @qcode{"PredictorNames"} @tab @tab A cell array of character vectors
-## specifying the predictor variable names.  The variable names are assumed to
-## be in the same order as they appear in the training data @var{X}.
+## @item @qcode{"Alpha"} @tab A vector of non negative elements used as
+## initial estimates of the alpha coefficients. Each element in the vector
+## corresponds to a row in the input data @var(X). The default value of Alpha is:
+## The default value of Alpha is:
+## - For two-class learning: zeros(size(X,1), 1)
+## - For one-class learning: 0.5 * ones(size(X,1), 1)
 ##
-## @item @qcode{"ResponseName"} @tab @tab A character vector specifying the name
-## of the response variable.
+## @item @qcode{"BoxConstraint"} @tab A positive scalar that specifies the
+## upper bound of Lagrange multipliers ie C in [0,C]. It determines the trade-off
+## between maximizing the margin and minimizing the classification error. The
+## default value of BoxConstraint is 1.
 ##
-## @item @qcode{"ClassNames"} @tab @tab A cell array of character vectors
-## specifying the names of the classes in the training data @var{Y}.
+## @item @qcode{"CacheSize"} @tab Specifies the cache size. It can be:
+## @itemize
+## @item A positive scalar that specifies the cache size in megabytes (MB).
+## @item A string "maximal" which will result in cache large enough to hold the
+## entire Gram matrix of size @math{NxN} where N is the number of rows in X.
+## The default value is 1000.
+## @end itemize
 ##
-## @item @qcode{"Cost"} @tab @tab A @math{NxR} numeric matrix containing
-## misclassification cost for the corresponding instances in @var{X} where
-## @math{R} is the number of unique categories in @var{Y}.  If an instance is
-## correctly classified into its category the cost is calculated to be 1, If
-## not then 0. cost matrix can be altered use @code{@var{obj.cost} = somecost}.
-## default value @qcode{@var{cost} = ones(rows(X),numel(unique(Y)))}.
+## @item @qcode{"CategoricalPredictors"} @tab @tab
 ##
-## @item @qcode{"Prior"} @tab @tab A numeric vector specifying the prior
-## probabilities for each class.  The order of the elements in @qcode{Prior}
-## corresponds to the order of the classes in @qcode{ClassNames}.
+## @item @qcode{"ClassNames"} @tab @tab
+##
+## @item @qcode{"ClipAlphas"} @tab @tab
+##
+## @item @qcode{"Cost"} @tab @tab
+##
+## @item @qcode{"CrossVal"} @tab @tab
+##
+## @item @qcode{"CVPartition"} @tab @tab
+##
+## @item @qcode{"Holdout"} @tab @tab
+##
+## @item @qcode{"KFold"} @tab @tab
+##
+## @item @qcode{"Leaveout"} @tab @tab
+##
+## @item @qcode{"GapTolerance"} @tab @tab
+##
+## @item @qcode{"DeltaGradientTolerance"} @tab @tab
+##
+## @item @qcode{"KKTTolerance"} @tab @tab
+##
+## @item @qcode{"IterationLimit"} @tab @tab
+##
+## @item @qcode{"KernelFunction"} @tab @tab Specifies the method for computing
+## elements of the Gram matrix. It accepts the following options:
+## @itemize
+## @item 'linear': Computes the linear kernel, which is simply the dot product
+## of the input vectors.
+## @item 'gaussian' or 'rbf': Computes the Gaussian kernel, also known as the
+## radial basis function (RBF) kernel. It measures the similarity between two
+## vectors in a high-dimensional space.
+## @item 'polynomial': Computes the polynomial kernel, which raises the
+## dot product of the input vectors to a specified power.
+## @item You can also specify the name of a custom kernel function. It must be of
+## the form: function G = KernelFunc(U, V)
+## This custom function must take two input matrices, U and V, and return a
+## matrix G of size M-by-N, where M and N are the number of rows in U and V.
+## @end itemize
+##
+## @item @qcode{"KernelScale"} @tab @tab
+##
+## @item @qcode{"KernelOffset"} @tab @tab
+##
+## @item @qcode{"OptimizeHyperparameters"} @tab @tab
+##
+## @item @qcode{"PolynomialOrder"} @tab @tab
+##
+## @item @qcode{"Nu"} @tab @tab
+##
+## @item @qcode{"NumPrint"} @tab @tab
+##
+## @item @qcode{"OutlierFraction"} @tab @tab
+##
+## @item @qcode{"PredictorNames"} @tab @tab
+##
+## @item @qcode{"Prior"} @tab @tab
+##
+## @item @qcode{"RemoveDuplicates"} @tab @tab
+##
+## @item @qcode{"ResponseName"} @tab @tab
+##
+## @item @qcode{"ScoreTransform"} @tab @tab
+##
+## @item @qcode{"Solver"} @tab @tab
+##
+## @item @qcode{"ShrinkagePeriod"} @tab @tab
+##
+## @item @qcode{"Standardize"} @tab @tab
+##
+## @item @qcode{"Verbose"} @tab @tab
+##
+## @item @qcode{"Weights"} @tab @tab
+##
+## @item @qcode{"DeltaGradientTolerance"} @tab @tab
+##
 ## @end multitable
 ##
-## @seealso{ClassificationSVM}
+## @seealso{ClassificationSVM, svmtrain, svmpredict}
 ## @end deftypefn
 
 function obj = fitcsvm (X, Y, varargin)
@@ -89,6 +167,13 @@ function obj = fitcsvm (X, Y, varargin)
 
 endfunction
 
+%!demo
+## No demo for now.
+
+## Test constructor
+%!test
+## No test for now.
+
 ## Test input validation
 %!error<fitcsvm: too few arguments.> fitcsvm ()
 %!error<fitcsvm: too few arguments.> fitcsvm (ones (4,1))
@@ -98,4 +183,3 @@ endfunction
 %! fitcsvm (ones (4,2), ones (3, 1))
 %!error<fitcsvm: number of rows in X and Y must be equal.>
 %! fitcsvm (ones (4,2), ones (3, 1), 'KFold', 2)
-
