@@ -127,7 +127,8 @@
 ##
 ## @item @qcode{"RemoveDuplicates"} @tab @tab
 ##
-## @item @qcode{"ResponseName"} @tab @tab
+## @item @qcode{"ResponseName"} @tab @tab Response Variable Name, specified as
+## a string. If omitted, the default value is @qcode{"Y"}.
 ##
 ## @item @qcode{"ScoreTransform"} @tab @tab
 ##

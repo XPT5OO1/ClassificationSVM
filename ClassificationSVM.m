@@ -55,9 +55,129 @@ classdef ClassificationSVM
 ## numeric matrix.  Each column of @var{X} represents one predictor (variable),
 ## and each row represents one observation.
 ##
-## @item @qcode{obj.Y} @tab @tab Class labels, specified as a logical or
+## @item @qcode{obj.Y} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.NumObservations} @tab @tab Class labels, specified as a logical or
 ## numeric vector, or cell array of character vectors.  Each value in @var{Y} is
 ## the observed class label for the corresponding row in @var{X}.
+##
+## @item @qcode{obj.W} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.ModelParameters} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.PredictorNames} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.ExpandedPredictorNames} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.ResponseName} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.ClassNames} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.Cost} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.Prior} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.ScoreTransform} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.Alpha} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.Beta} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.Bias} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.KernelParameters} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.Mu} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.Sigma} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.SupportVectors} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.SupportVectorLabels} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.BoxConstraints} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.CacheInfo} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.ConvergenceInfo} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.Gradient} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.IsSupportVector} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.Nu} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.NumIterations} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.OutlierFraction} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.ShrinkagePeriod} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.Solver} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.RowsUsed} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
+##
+## @item @qcode{obj.HyperparameterOptimizationResults} @tab @tab Unstandardized predictor data, specified as a
+## numeric matrix.  Each column of @var{X} represents one predictor (variable),
+## and each row represents one observation.
 ##
 ## @end multitable
 ##
@@ -66,8 +186,8 @@ classdef ClassificationSVM
 
   properties (Access = public)
 
-    X = [];                   # Predictor data
-    Y = [];                   # Class labels
+    X = [];                   # Predictor data used for training the model
+    Y = [];                   # Class labels used for training the model
 
     NumObservations = [];     # Number of observations in training dataset
     RowsUsed        = [];     # Rows used in fitting
@@ -107,6 +227,39 @@ classdef ClassificationSVM
       nsample = rows (X);                    #Number of samples in X
       ndims_X = columns (X);                 #Number of dimensions in X
 
+      ## Check if X is a table
+      if (istable(X))
+        if (ischar(Y) && ismember(Y, X.Properties.VariableNames))
+          ## Use the variable Y from the table as the response
+          Y = X.(Y);
+          X(:, Y) = [];
+        elseif (isstring(Y))
+          parts = strsplit(Y, '~');
+          if (numel(parts) != 2)
+              error("ClassificationSVM: Y must be of the form 'y ~ x1 + x2 + ...'");
+          endif
+          responseVar = strtrim(parts{1});
+          predictorStr = strtrim(parts{2});
+          predictorVars = strsplit(predictorStr, '+');
+
+          if (!ismember(responseVar, X.Properties.VariableNames))
+             error("ClassificationSVM: Response variable not found in table.");
+          endif
+          for i = 1:numel(predictorVars)
+              if (!ismember(predictorVars{i}, X.Properties.VariableNames))
+                  error("ClassificationSVM: Predictor variable not found in table.");
+              end
+          endif
+          ## Extract response variable
+          Y = X.(responseVar);
+
+          ## Extract predictor variables
+          X = X(:, predictorVars);
+
+        else
+          error('ClassificationSVM: Invalid Y.');
+      endif
+
       ## Check correspodence between predictors and response
       if (nsample != rows (Y))
         error ("ClassificationSVM: number of rows in X and Y must be equal.");
@@ -130,7 +283,7 @@ classdef ClassificationSVM
        KernelFunction         = 'linear';
       endif
 
-      BoxConstraint           = 1;
+      BoxConstraints           = 1;
       CacheSize               = 1000;
       CategoricalPredictors   = ;
       ClassNames              = ;
@@ -179,9 +332,9 @@ classdef ClassificationSVM
             endif
 
           case "boxconstraint"
-            BoxConstraint = varargin{2};
-            if ( !(isscalar(BoxConstraint) && BoxConstraint > 0))
-              error ("ClassificationSVM: BoxConstraint must be a positive scalar.");
+            BoxConstraints = varargin{2};
+            if ( !(isscalar(BoxConstraints) && BoxConstraints > 0))
+              error ("ClassificationSVM: BoxConstraints must be a positive scalar.");
             endif
 
           case "cachesize"
@@ -414,6 +567,18 @@ endclassdef
 ## Test input validation for constructor
 %!error<ClassificationSVM: too few input arguments.> ClassificationSVM ()
 %!error<ClassificationSVM: too few input arguments.> ClassificationSVM (ones(10,2))
+%!error<ClassificationSVM: Y must be of the form 'y ~ x1 + x2 + ...'>
+%! ClassificationSVM (table([1,2],[9,8],[5,6], 'VariableNames', {'y', 'x1', 'x2'}), 'y x1 + x2');
+%!error<ClassificationSVM: Y must be of the form 'y ~ x1 + x2 + ...'>
+%! ClassificationSVM (table([1,2],[9,8],[5,6], 'VariableNames', {'y', 'x1', 'x2'}), 'x1 + x2');
+%!error<ClassificationSVM: Y must be of the form 'y ~ x1 + x2 + ...'>
+%! ClassificationSVM (table([1,2],[9,8],[5,6], 'VariableNames', {'y', 'x1', 'x2'}), 'y ~ ');
+%!error<ClassificationSVM: Response variable not found in table.>
+%! ClassificationSVM (table([1,2],[9,8],[5,6], 'VariableNames', {'y', 'x1', 'x2'}), 'y1 ~ x1 + x2');
+%!error<ClassificationSVM: Predictor variable not found in table.>
+%! ClassificationSVM (table([1,2],[9,8],[5,6], 'VariableNames', {'y', 'x1', 'x2'}), 'y ~ x1 + x3');
+%!error<ClassificationSVM: Invalid Y.>
+%! ClassificationSVM (table([1,2],[9,8],[5,6], 'VariableNames', {'y', 'x1', 'x2'}), 1);
 %!error<ClassificationSVM: number of rows in X and Y must be equal.> ...
 %! ClassificationSVM (ones(10,2), ones (5,1))
 %!error<ClassificationSVM: SVM only supports one class or two class learning.>
@@ -424,8 +589,8 @@ endclassdef
 %! ClassificationSVM (ones(10,2), ones (10,1), "Alpha", ones(5,1))
 %!error<ClassificationSVM: Alpha must be non-negative.>
 %! ClassificationSVM (ones(10,2), ones (10,1), "Alpha", -1)
-%!error<ClassificationSVM: BoxConstraint must be a positive scalar.>
-%! ClassificationSVM (ones(10,2), ones (10,1), "BoxConstraint", -1)
+%!error<ClassificationSVM: BoxConstraints must be a positive scalar.>
+%! ClassificationSVM (ones(10,2), ones (10,1), "BoxConstraints", -1)
 %!error<ClassificationSVM: CacheSize must be a positive scalar.>
 %! ClassificationSVM (ones(10,2), ones (10,1), "CacheSize", -100)
 %!error<ClassificationSVM: unidentified CacheSize.>
