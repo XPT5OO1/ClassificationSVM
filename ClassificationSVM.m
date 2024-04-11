@@ -131,7 +131,7 @@ classdef ClassificationSVM
 ## numeric matrix.  Each column of @var{X} represents one predictor (variable),
 ## and each row represents one observation.
 ##
-## @item @qcode{obj.BoxConstraints} @tab @tab Unstandardized predictor data, specified as a
+## @item @qcode{obj.BoxConstraint} @tab @tab Unstandardized predictor data, specified as a
 ## numeric matrix.  Each column of @var{X} represents one predictor (variable),
 ## and each row represents one observation.
 ##
@@ -186,30 +186,43 @@ classdef ClassificationSVM
 
   properties (Access = public)
 
-    X = [];                   # Predictor data used for training the model
-    Y = [];                   # Class labels used for training the model
+    X                                 = [];     # Predictor data
+    Y                                 = [];     # Class labels
+    W                                 = [];     # Weights of observations used to train this model
 
-    NumObservations = [];     # Number of observations in training dataset
-    RowsUsed        = [];     # Rows used in fitting
-    Standardize     = [];     # Flag to standardize predictors
-    Sigma           = [];     # Predictor standard deviations
-    Mu              = [];     # Predictor means
+    NumObservations                   = [];     # Number of observations in training dataset
+    PredictorNames                    = [];     # Predictor variables names
+    ResponseName                      = [];     # Response variable name
+    RowsUsed                          = [];     # Rows used in fitting
+    Mu                                = [];     # Predictor means
+    Sigma                             = [];     # Predictor standard deviations
 
-    NumPredictors   = [];     # Number of predictors
-    PredictorNames  = [];     # Predictor variables names
-    ResponseName    = [];     # Response variable name
-    ClassNames      = [];     # Names of classes in Y
-    BreakTies       = [];     # Tie-breaking algorithm
-    Prior           = [];     # Prior probability for each class
-    Cost            = [];     # Cost of misclassification
+    ModelParameters                   = [];     # SVM parameters.
+    ExpandedPredictorNames            = [];     # Expanded predictor names
+    ClassNames                        = [];     # Names of classes in Y
+    Cost                              = [];     # Cost of misclassification
+    Prior                             = [];     # Prior probability for each class
+    ScoreTransform                    = [];     # Transformation applied to predicted classification scores
 
-    NumNeighbors    = [];     # Number of nearest neighbors
-    Distance        = [];     # Distance metric
-    DistanceWeight  = [];     # Distance weighting function
-    DistParameter   = [];     # Parameter for distance metric
-    NSMethod        = [];     # Nearest neighbor search method
-    IncludeTies     = [];     # Flag for handling ties
-    BucketSize      = [];     # Maximum data points in each node
+    Alpha                             = [];     # Coefficients obtained by solving the dual problem
+    Beta                              = [];     # Coefficients for the primal linear problem
+    Bias                              = [];     # Bias term
+    KernelParameters                  = [];     # Kernel parameters
+
+    SupportVectors                    = [];     # Support vectors
+    SupportVectorLabels               = [];     # Support vector labels (+1 and -1)
+    IsSupportVector                   = [];     # Indices of support vectors in the training data
+    BoxConstraints                    = [];     # Box constraints
+    CacheInfo                         = [];     # Cache information
+    ConvergenceInfo                   = [];     # Convergence information
+
+    Gradient                          = [];     # Gradient values in the training data
+    Nu                                = [];     # Nu parameter for one-class learning
+    NumIterations                     = [];     # Number of iterations taken by optimization
+    OutlierFraction                   = [];     # Expected fraction of outliers in the training data
+    ShrinkagePeriod                   = [];     # Number of iterations between reductions of the active set
+    Solver                            = [];     # Solver used
+    HyperparameterOptimizationResults = [];     # An object or table describing the results of hyperparameter optimization
 
   endproperties
 
@@ -233,10 +246,10 @@ classdef ClassificationSVM
           ## Use the variable Y from the table as the response
           Y = X.(Y);
           X(:, Y) = [];
-        elseif (isstring(Y))
+        elseif (isstring(Y))          ## if formula is given as input
           parts = strsplit(Y, '~');
           if (numel(parts) != 2)
-              error("ClassificationSVM: Y must be of the form 'y ~ x1 + x2 + ...'");
+              error("ClassificationSVM: Formula must be of the form 'y ~ x1 + x2 + ...'");
           endif
           responseVar = strtrim(parts{1});
           predictorStr = strtrim(parts{2});
@@ -283,7 +296,7 @@ classdef ClassificationSVM
        KernelFunction         = 'linear';
       endif
 
-      BoxConstraints           = 1;
+      BoxConstraint           = 1;
       CacheSize               = 1000;
       CategoricalPredictors   = ;
       ClassNames              = ;
@@ -332,9 +345,9 @@ classdef ClassificationSVM
             endif
 
           case "boxconstraint"
-            BoxConstraints = varargin{2};
-            if ( !(isscalar(BoxConstraints) && BoxConstraints > 0))
-              error ("ClassificationSVM: BoxConstraints must be a positive scalar.");
+            BoxConstraint = varargin{2};
+            if ( !(isscalar(BoxConstraint) && BoxConstraint > 0))
+              error ("ClassificationSVM: BoxConstraint must be a positive scalar.");
             endif
 
           case "cachesize"
@@ -350,6 +363,11 @@ classdef ClassificationSVM
             endif
 
           case "categoricalpredictors"
+            if (! ((isnumeric (CategoricalPredictors) && isvector (CategoricalPredictors)) ||
+                  (strcmpi (CategoricalPredictors, "all") || )))
+              error (strcat (["ClassificationSVM: CategoricalPredictors must be either a"], ...
+                             [" numeric vector or a string."]));
+            endif
 
           case "classnames"
 
@@ -589,8 +607,8 @@ endclassdef
 %! ClassificationSVM (ones(10,2), ones (10,1), "Alpha", ones(5,1))
 %!error<ClassificationSVM: Alpha must be non-negative.>
 %! ClassificationSVM (ones(10,2), ones (10,1), "Alpha", -1)
-%!error<ClassificationSVM: BoxConstraints must be a positive scalar.>
-%! ClassificationSVM (ones(10,2), ones (10,1), "BoxConstraints", -1)
+%!error<ClassificationSVM: BoxConstraint must be a positive scalar.>
+%! ClassificationSVM (ones(10,2), ones (10,1), "BoxConstraint", -1)
 %!error<ClassificationSVM: CacheSize must be a positive scalar.>
 %! ClassificationSVM (ones(10,2), ones (10,1), "CacheSize", -100)
 %!error<ClassificationSVM: unidentified CacheSize.>
@@ -611,11 +629,12 @@ endclassdef
 %! ClassificationSVM (ones(10,2), ones (10,1), "PredictorNames", ['a','b','c'])
 %!error<ClassificationSVM: PredictorNames must have same number of columns as X.> ...
 %! ClassificationSVM (ones(10,2), ones (10,1), "PredictorNames", {'a','b','c'})
+%!error<ClassificationSVM: invalid parameter name in optional pair arguments.> ...
+%! ClassificationSVM (ones(10,2), ones (10,1), "some", "some")
 
 %!error<ClassificationSVM: invalid values in X.> ...
 %! ClassificationSVM ([1;2;3;"a";4], ones (5,1))
-%!error<ClassificationSVM: invalid parameter name in optional pair arguments.> ...
-%! ClassificationSVM (ones(10,2), ones (10,1), "some", "some")
+
 %!error<ClassificationSVM: Formula must be a string.>
 %! ClassificationSVM (ones(10,2), ones (10,1), "formula", {"y~x1+x2"})
 %!error<ClassificationSVM: Formula must be a string.>
